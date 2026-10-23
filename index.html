@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>榮際數位畫單工具 Alpha 0.2｜架構重整測試版</title>
+<title>榮際數位畫單工具 Alpha 0.22｜多槽盆排列與定位尺寸修正版</title>
 <style>
 :root{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:#20252b;background:#f3f5f7}
 *{box-sizing:border-box}body{margin:0}header{padding:15px 20px;background:#fff;border-bottom:1px solid #d9dde2}
@@ -29,8 +29,8 @@ canvas{display:block;width:100%;height:auto;background:white}.status{font-size:1
 </head>
 <body>
 <header>
-  <h1>榮際數位畫單工具 <span style="font-weight:400;color:#6b7280">Alpha 0.2｜架構重整測試版</span></h1>
-  <p>單機離線 HTML｜統一座標系統｜多孔管理｜PNG 輸出｜本版尚待實際操作驗收</p>
+  <h1>榮際數位畫單工具 <span style="font-weight:400;color:#6b7280">Alpha 0.22｜多槽盆排列與定位尺寸修正版</span></h1>
+  <p>單機離線 HTML｜統一座標系統｜多孔管理｜排列指令｜定位尺寸切換｜PNG 輸出</p>
 </header>
 <div class="layout">
 <section class="panel">
@@ -78,15 +78,15 @@ canvas{display:block;width:100%;height:auto;background:white}.status{font-size:1
       <label class="field"><span>相對槽盆 X 方向</span><select id="relXDir"><option value="right">向右</option><option value="left">向左</option></select></label>
       <label class="field"><span>距槽盆中心 X</span><span class="unit"><input id="relX" type="number" min="0" step=".1" value="0"><span>cm</span></span></label>
       <label class="field"><span>相對槽盆 Y 方向</span><select id="relYDir"><option value="front">向前</option><option value="rear">向後</option></select></label>
-      <label class="field"><span>距槽盆中心 Y</span><span class="unit"><input id="relY" type="number" min="0" step=".1" value="21.5"><span>cm</span></span></label>
+      <label class="field"><span>Y 參考值（後距固定 8.5 cm）</span><span class="unit"><input id="relY" type="number" min="0" step=".1" value="21.5"><span>cm</span></span></label>
     </div>
     <div id="tapIndependentFields" hidden>
       <label class="field"><span>孔中心距左側 X</span><span class="unit"><input id="tapX" type="number" min="0" step=".1" value="50"><span>cm</span></span></label>
-      <label class="field"><span>孔中心距前側 Y</span><span class="unit"><input id="tapY" type="number" min="0" step=".1" value="8.5"><span>cm</span></span></label>
+      <label class="field"><span>孔中心距檯面後側 Y</span><span class="unit"><input id="tapY" type="number" min="0" step=".1" value="8.5"><span>cm</span></span></label>
     </div>
     <div class="notice" id="tapConflict" hidden>槽盆相對定位與獨立定位資料不一致。圖面依目前選取的定位模式顯示；切換模式不會刪除另一組定位資料。</div>
     <div class="actions"><button id="syncTap">將目前定位轉換到另一種定位方式</button></div>
-    <p class="hint">本版保留兩種定位資料；轉換按鈕會依目前模式更新另一組定位資料。水龍頭孔超出檯面時只顯示，不阻擋 PNG 輸出。</p>
+    <p class="hint">Alpha 0.23：龍頭孔中心預設距檯面後側 8.5 cm。槽盆相對模式仍使用槽盆定位 X；Y 軸統一以檯面後距 8.5 cm 為準，避免與槽盆中心 Y 值衝突。水龍頭孔超出檯面時只顯示，不阻擋 PNG 輸出。</p>
   </div>
   <div class="section">
     <h2>5. 多槽盆排列</h2>
@@ -95,8 +95,11 @@ canvas{display:block;width:100%;height:auto;background:white}.status{font-size:1
     <div class="grid2">
       <label class="checkrow"><input id="guideCenter" type="checkbox" checked> 顯示中心線</label>
       <label class="checkrow"><input id="guideEdges" type="checkbox" checked> 顯示邊緣參考線</label>
+      <label class="checkrow"><input id="showCenterDims" type="checkbox" checked> 中心定位尺寸</label>
+      <label class="checkrow"><input id="showRegionDims" type="checkbox" checked> B 方案區域尺寸</label>
+      <label class="checkrow"><input id="showGapDims" type="checkbox"> 孔邊緣／間距尺寸</label>
     </div>
-    <p class="hint">只有按下「執行排列指令」時才會更新槽盆 X 座標；手動定位不會自動觸發排列。</p>
+    <p class="hint">方案 A：依各孔實際寬度，平均分配左右兩端及孔洞間的淨空間。方案 B：檯面等分為相同寬度區域，各槽盆中心對準區域中心。只有按下「執行排列指令」才會更新 X 座標；手動定位不會自動觸發排列。若空間不足，會提示並保留原座標。</p>
   </div>
   <div class="section">
     <h2>6. 邊緣加工標記</h2>
@@ -119,7 +122,7 @@ canvas{display:block;width:100%;height:auto;background:white}.status{font-size:1
   </div>
   <div class="actions"><button id="export" class="primary">輸出 PNG 圖片</button><button id="reset">重設範例</button></div>
   <p class="status" id="status" role="status"></p>
-  <p class="notice">Alpha 0.2 架構重整測試版：請勿直接將輸出圖當成正式生產指示。請實際測試所有操作，並核對加工符號與尺寸規則。</p>
+  <p class="notice">Alpha 0.22 修正版：仍須實際驗收排列、尺寸與加工標記，請勿未經核對直接作為正式生產指示。請實際測試所有操作，並核對加工符號與尺寸規則。</p>
 </section>
 <section class="preview">
   <div class="previewtop">
@@ -131,8 +134,8 @@ canvas{display:block;width:100%;height:auto;background:white}.status{font-size:1
       <span class="pill">單位：cm</span>
     </div>
   </div>
-  <p class="hint" id="modeHint">一般模式：不會因點擊或拖曳而修改圖面物件。先啟用上方功能，再操作圖面。</p>
-  <div class="canvaswrap"><canvas id="drawing" width="1200" height="820" aria-label="檯面畫單預覽"></canvas></div>
+  <p class="hint" id="modeHint">一般模式：不會因點擊或拖曳而修改圖面物件。快速定位可選取槽盆孔、龍頭孔與檯面；圖面物件編輯可選取幾何物件並跳轉設定，文字與標籤可拖曳。</p>
+  <div class="canvaswrap"><canvas id="drawing" width="1200" height="920" aria-label="檯面畫單預覽"></canvas></div>
   <p class="hint">黑色外框：檯面｜黑灰色孔洞：槽盆孔｜藍色孔洞：水龍頭孔｜虛線：定位參考線。預覽與 PNG 由同一繪圖函式產生。</p>
   <p class="hint">座標定義：左前角 (0,0)，X 向右、Y 向後。距後側 = 檯面深度 − Y。</p>
 </section>
@@ -146,9 +149,16 @@ let marks={'前側':'','左側':'','右側':'','後方':''};
 const fmt=n=>Number(Number(n).toFixed(1)).toString();
 const num=id=>Number($(id).value);
 const selected=()=>basins.find(b=>b.id===selectedId)||basins[0];
-function newTap(){return {enabled:true,mode:'basin',shape:'circle',diameter:3.5,customDiameter:3.5,w:3.5,d:3.5,relXDir:'right',relX:0,relYDir:'front',relY:21.5,x:50,y:8.5,showLeft:false,showRight:false,showFront:false};}
+function newTap(){return {enabled:true,mode:'basin',shape:'circle',diameter:3.5,customDiameter:3.5,w:3.5,d:3.5,relXDir:'right',relX:0,relYDir:'rear',relY:8.5,x:50,y:8.5,showLeft:false,showRight:false,showFront:false};}
 function tapSize(t){return t.diameter==='custom'?Number(t.customDiameter):Number(t.diameter);}
-function tapPos(b){const t=b.tap;if(!t)return null;if(t.mode==='independent')return {x:Number(t.x),y:Number(t.y)};return {x:Number(b.x)+Number(t.relX)*(t.relXDir==='right'?1:-1),y:Number(b.y)+Number(t.relY)*(t.relYDir==='rear'?1:-1)};}
+function tapPos(b){
+ const t=b.tap;if(!t)return null;
+ // Alpha 0.23 rule: rear distance is the canonical Y reference in both modes.
+ const rearDistance=Number(t.y===undefined?8.5:t.y);
+ const y=num('depth')-rearDistance;
+ if(t.mode==='independent')return {x:Number(t.x),y};
+ return {x:Number(b.x)+Number(t.relX)*(t.relXDir==='right'?1:-1),y};
+}
 function status(s){$('status').textContent=s;}
 function renderList(){
  $('holeList').innerHTML='';
@@ -242,6 +252,8 @@ function drawCallout(o,ax,ay,color){
  ctx.restore();
 }
 function hitTestObject(px,py){
+ const geom=geometryTargets.filter(o=>o.bounds&&px>=o.bounds.x&&px<=o.bounds.x+o.bounds.w&&py>=o.bounds.y&&py<=o.bounds.y+o.bounds.h);
+ if(geom.length)return geom[geom.length-1];
  const list=Object.values(labelObjects).filter(o=>o&&o.visible!==false&&o._bounds);
  for(let i=list.length-1;i>=0;i--){const b=list[i]._bounds;if(px>=b.x-6&&px<=b.x+b.w+6&&py>=b.y-6&&py<=b.y+b.h+6)return list[i];}
  return null;
@@ -252,17 +264,20 @@ function setMode(mode){
  $('quickMode').classList.toggle('mode-on',quickMode);$('editMode').classList.toggle('mode-on',editMode);
  $('quickMode').textContent='快速定位設定欄位：'+(quickMode?'啟用中':'關閉');
  $('editMode').textContent='圖面物件編輯：'+(editMode?'啟用中':'關閉');
- $('modeHint').textContent=quickMode?'快速定位模式：點選標註或浮動標籤，切換至對應槽盆並捲動到相關設定欄位。':editMode?'圖面物件編輯模式：點選文字物件會自動跳至左側第 7 區「標註、施工顯示與備註」，再拖曳可移動物件；孔洞幾何位置不會因此改變。':'一般模式：不會因點擊或拖曳而修改圖面物件。先啟用上方功能，再操作圖面。';
+ $('modeHint').textContent=quickMode?'快速定位模式：點選標註或浮動標籤，切換至對應槽盆並捲動到相關設定欄位。':editMode?'圖面物件編輯模式：點選文字物件會自動跳至左側第 7 區「標註、施工顯示與備註」，再拖曳可移動物件；孔洞幾何位置不會因此改變。':'一般模式：不會因點擊或拖曳而修改圖面物件。快速定位可選取槽盆孔、龍頭孔與檯面；圖面物件編輯可選取幾何物件並跳轉設定，文字與標籤可拖曳。';
  activeObjectId=null;draw();
 }
 
+let geometryTargets=[];
 function draw(){
+ geometryTargets=[];
  const L=num('length'),D=num('depth');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
- ctx.fillStyle='#222';ctx.textAlign='left';ctx.font='bold 28px sans-serif';ctx.fillText('榮際數位畫單｜Alpha 0.2',60,45);
+ ctx.fillStyle='#222';ctx.textAlign='left';ctx.font='bold 28px sans-serif';ctx.fillText('榮際數位畫單｜Alpha 0.23',60,45);
  ctx.font='18px sans-serif';ctx.fillStyle='#555';ctx.fillText('檯面尺寸：'+fmt(L)+' × '+fmt(D)+' cm',60,75);
  if(!(L>0&&D>0)){ctx.fillStyle='#a22';ctx.fillText('請輸入有效的檯面尺寸',60,110);return;}
  const maxW=900,maxH=480,scale=Math.min(maxW/L,maxH/D),w=L*scale,h=D*scale,x=(canvas.width-w)/2,y=150+(maxH-h)/2;
  ctx.strokeStyle='#222';ctx.lineWidth=3;ctx.strokeRect(x,y,w,h);
+ geometryTargets.push({id:'countertop',kind:'geometry',ownerType:'countertop',ownerId:null,text:'檯面總尺寸',bounds:{x:x-6,y:y-30,w:w+12,h:h+36},target:'length'});
  if($('showDims').checked){
   ctx.strokeStyle='#555';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x,y-20);ctx.lineTo(x+w,y-20);ctx.moveTo(x,y-27);ctx.lineTo(x,y-13);ctx.moveTo(x+w,y-27);ctx.lineTo(x+w,y-13);ctx.stroke();
   ctx.fillStyle='#222';ctx.textAlign='center';ctx.font='18px sans-serif';ctx.fillText(fmt(L)+' cm',x+w/2,y-28);
@@ -281,6 +296,7 @@ function draw(){
   ctx.restore();
   ctx.beginPath();if(b.shape==='rect')ctx.rect(bx-rx,by-ry,rx*2,ry*2);else ctx.ellipse(bx,by,rx,ry,0,0,Math.PI*2);
   ctx.strokeStyle=b.id===selectedId?'#222':'#6f7780';ctx.lineWidth=b.id===selectedId?3:2;ctx.stroke();
+  geometryTargets.push({id:'basin-geometry-'+b.id,kind:'geometry',ownerType:'basin',ownerId:b.id,text:b.name,target:'basinW',bounds:{x:bx-rx-8,y:by-ry-8,w:rx*2+16,h:ry*2+16}});
   if(b.id===selectedId){ctx.strokeStyle='#777';ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(bx-9,by);ctx.lineTo(bx+9,by);ctx.moveTo(bx,by-9);ctx.lineTo(bx,by+9);ctx.stroke();ctx.setLineDash([]);}
   // Geometry labels are drawn separately from geometry and can be edited independently.
   if(!labelObjects['basin-'+b.id]) labelObjects['basin-'+b.id]={id:'basin-'+b.id,kind:'callout',ownerType:'basin',ownerId:b.id,text:b.name,x:bx+rx+45,y:by+ry+58,font:18,visible:true,defaulted:false};
@@ -306,6 +322,7 @@ function draw(){
     ctx.save();ctx.strokeStyle='#1769aa';ctx.lineWidth=1.5;ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(tx,y);ctx.lineTo(tx,ty);ctx.stroke();ctx.restore();
     ctx.beginPath();if(t.shape==='rect')ctx.rect(tx-Number(t.w)*scale/2,ty-Number(t.d)*scale/2,Number(t.w)*scale,Number(t.d)*scale);else ctx.arc(tx,ty,Math.max(3,(tapSize(t)||3.5)*scale/2),0,Math.PI*2);
     ctx.strokeStyle='#1769aa';ctx.lineWidth=2.5;ctx.stroke();
+    geometryTargets.push({id:'tap-geometry-'+b.id,kind:'geometry',ownerType:'tap',ownerId:b.id,text:(i+1)+'號龍頭孔',target:'tapEnabled',bounds:{x:tx-(t.shape==='rect'?Number(t.w)*scale/2:Math.max(3,(tapSize(t)||3.5)*scale/2))-8,y:ty-(t.shape==='rect'?Number(t.d)*scale/2:Math.max(3,(tapSize(t)||3.5)*scale/2))-8,w:(t.shape==='rect'?Number(t.w)*scale:Math.max(3,(tapSize(t)||3.5)*scale))+16,h:(t.shape==='rect'?Number(t.d)*scale:Math.max(3,(tapSize(t)||3.5)*scale))+16}});
     const tapId='tap-'+b.id;
     if(!labelObjects[tapId])labelObjects[tapId]={id:tapId,kind:'callout',ownerType:'tap',ownerId:b.id,text:(i+1)+'號龍頭孔',x:tx+75,y:ty-45,font:17,visible:true,defaulted:false};
     labelObjects[tapId].text=(i+1)+'號龍頭孔';
@@ -313,9 +330,35 @@ function draw(){
    }
   }
  });
- ctx.textAlign='left';ctx.fillStyle='#333';ctx.font='16px sans-serif';ctx.fillText('加工標記：'+['前側','左側','右側','後方'].map(e=>e+' '+(marks[e]||'—')).join('　'),60,720);
- const note=$('notes').value.trim();if(note){ctx.font='15px sans-serif';ctx.fillText('備註：'+note.slice(0,100),60,750);}
- ctx.textAlign='right';ctx.fillStyle='#777';ctx.font='13px sans-serif';ctx.fillText($('compact').checked?'精簡施工圖｜示意畫單':'完整標註｜示意畫單',1140,795);
+   // Optional layout dimensions: derived from current geometry, never modify hole positions.
+  const ordered=[...basins].sort((a,b)=>Number(a.x)-Number(b.x));
+  const dimY=y+h+42;
+  function dimLine(x1,x2,yy,label){
+    ctx.strokeStyle='#68717b';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x1,yy);ctx.lineTo(x2,yy);ctx.moveTo(x1,yy-5);ctx.lineTo(x1,yy+5);ctx.moveTo(x2,yy-5);ctx.lineTo(x2,yy+5);ctx.stroke();
+    ctx.fillStyle='#4b5563';ctx.font='15px sans-serif';ctx.textAlign='center';ctx.fillText(label,(x1+x2)/2,yy-7);
+  }
+  if(ordered.length && $('showCenterDims').checked){
+    ctx.fillStyle='#4b5563';ctx.font='14px sans-serif';ctx.textAlign='left';ctx.fillText('中心定位尺寸',Math.max(28,x),dimY+20);
+    const pts=[0,...ordered.map(b=>Number(b.x)),L];
+    const yy=dimY+45;
+    for(let i=0;i<pts.length-1;i++)dimLine(x+pts[i]*scale,x+pts[i+1]*scale,yy,fmt(pts[i+1]-pts[i])+' cm');
+  }
+  if(ordered.length && $('showRegionDims').checked && $('arrangement').value==='symmetric'){
+    const yy=dimY+92;
+    ctx.fillStyle='#4b5563';ctx.font='14px sans-serif';ctx.textAlign='left';ctx.fillText('B 方案區域尺寸',Math.max(28,x),yy-17);
+    for(let i=0;i<ordered.length;i++)dimLine(x+(L*i/ordered.length)*scale,x+(L*(i+1)/ordered.length)*scale,yy,fmt(L/ordered.length)+' cm');
+  }
+  if(ordered.length && $('showGapDims').checked){
+    const yy=dimY+139;
+    ctx.fillStyle='#4b5563';ctx.font='14px sans-serif';ctx.textAlign='left';ctx.fillText('孔邊緣／間距',Math.max(28,x),yy-17);
+    const spans=[];let cursor=0;
+    for(const b of ordered){const left=Number(b.x)-Number(b.w)/2;spans.push([cursor,left,Math.max(0,left-cursor)]);cursor=Number(b.x)+Number(b.w)/2;}
+    spans.push([cursor,L,Math.max(0,L-cursor)]);
+    spans.forEach(([a,bv,g])=>dimLine(x+a*scale,x+bv*scale,yy,fmt(g)+' cm'));
+  }
+ctx.textAlign='left';ctx.fillStyle='#333';ctx.font='16px sans-serif';ctx.fillText('加工標記：'+['前側','左側','右側','後方'].map(e=>e+' '+(marks[e]||'—')).join('　'),60,825);
+ const note=$('notes').value.trim();if(note){ctx.font='15px sans-serif';ctx.fillText('備註：'+note.slice(0,100),60,855);}
+ ctx.textAlign='right';ctx.fillStyle='#777';ctx.font='13px sans-serif';ctx.fillText($('compact').checked?'精簡施工圖｜示意畫單':'完整標註｜示意畫單',1140,895);
  refreshLabelSelect();syncLabelValues();
 }
 function validForExport(){
@@ -337,17 +380,33 @@ $('tapEnabled').addEventListener('change',()=>{const b=selected();if(!b.tap)b.ta
 $('toggleTap').onclick=()=>{const b=selected();if(!b.tap)b.tap=newTap();else b.tap.enabled=!b.tap.enabled;syncUI();draw();status(b.tap.enabled?'已啟用此槽盆的配對水龍頭孔。':'已停用配對水龍頭孔；設定資料已保留。');};
 ['tapMode','tapShape','tapDiameter','tapCustomDiameter','tapW','tapD','relXDir','relX','relYDir','relY','tapX','tapY'].forEach(id=>$(id).addEventListener('input',()=>{readTapUI();syncTapFields();draw();}));
 $('syncTap').onclick=()=>{const b=selected();if(!b.tap)b.tap=newTap();const t=b.tap;if(t.mode==='basin'){const p=tapPos(b);t.x=p.x;t.y=p.y;t.mode='independent';}else{t.relXDir=t.x>=b.x?'right':'left';t.relX=Math.abs(t.x-b.x);t.relYDir=t.y>=b.y?'rear':'front';t.relY=Math.abs(t.y-b.y);t.mode='basin';}syncUI();draw();status('已將目前定位轉換至另一種定位方式。');};
-$('applyArrangement').onclick=()=>{if(basins.length<2){status('至少需要兩個槽盆孔才能執行排列。');return;}const L=num('length'),D=num('depth'),sorted=[...basins].sort((a,b)=>a.x-b.x),margin=Math.max(...sorted.map(b=>b.w/2))+2; if($('arrangement').value==='even'){const gap=(L-2*margin-sorted.reduce((s,b)=>s+b.w,0))/(sorted.length-1);let cur=margin;sorted.forEach(b=>{b.x=cur+b.w/2;cur+=b.w+gap;});}else{const center=L/2,step=(L-2*margin)/(sorted.length-1);sorted.forEach((b,i)=>b.x=margin+i*step);}sorted.forEach(b=>b.y=Math.max(b.d/2,Math.min(D-b.d/2,b.y)));syncUI();draw();status('已執行排列指令；僅更新槽盆 X 座標，Y 座標保留並限制在檯面內。');};
+$('applyArrangement').onclick=()=>{
+ if(basins.length<2){status('至少需要兩個槽盆孔才能執行排列。');return;}
+ const L=num('length'),sorted=[...basins].sort((a,b)=>Number(a.x)-Number(b.x)),widths=sorted.map(b=>Number(b.w));
+ if(!(L>0)||widths.some(w=>!(w>0))){status('檯面長度或槽盆孔寬度無效，未變更座標。');return;}
+ if($('arrangement').value==='even'){
+   // Equal clear space at both ends and between every adjacent pair.
+   const gap=(L-widths.reduce((sum,w)=>sum+w,0))/(sorted.length+1);
+   if(gap<0){status('槽盆孔總寬度已超過檯面長度，無法等間距排列；原座標已保留。');return;}
+   let edge=gap;
+   sorted.forEach((b,i)=>{b.x=edge+widths[i]/2;edge+=widths[i]+gap;});
+ }else{
+   const region=L/sorted.length;
+   if(widths.some(w=>w>region)){status('至少一個槽盆孔寬度大於 B 方案的區域寬度 '+fmt(region)+' cm，無法完整置中分區；原座標已保留。');return;}
+   sorted.forEach((b,i)=>{b.x=region*(i+0.5);});
+ }
+ syncUI();draw();status($('arrangement').value==='even'?'方案 A 已完成：左右端及各孔之間的淨空間相等。':'方案 B 已完成：各槽盆中心對準等寬區域中心。手動定位不會自動觸發排列。');
+};
 $('applyEdge').onclick=()=>{marks[$('edgeName').value]=$('edgeSymbol').value;draw();status('已套用邊緣加工標記。');};
 $('clearEdges').onclick=()=>{marks={'前側':'','左側':'','右側':'','後方':''};draw();status('已清除全部邊緣加工標記。');};
-['guideCenter','guideEdges','compact','showDims','notes'].forEach(id=>$(id).addEventListener('input',()=>draw()));
+['guideCenter','guideEdges','showCenterDims','showRegionDims','showGapDims','compact','showDims','notes','arrangement'].forEach(id=>$(id).addEventListener('input',()=>draw()));
 $('labelSelect').addEventListener('change',()=>selectLabelObject($('labelSelect').value));
 $('fontSize').addEventListener('input',()=>{const o=labelObjects[activeObjectId];if(!o)return;o.font=num('fontSize');syncLabelValues();draw();});
 $('offsetX').addEventListener('input',()=>{const o=labelObjects[activeObjectId];if(!o)return;o.x=(o.baseX??o.x)+num('offsetX');syncLabelValues();draw();});
 $('offsetY').addEventListener('input',()=>{const o=labelObjects[activeObjectId];if(!o)return;o.y=(o.baseY??o.y)+num('offsetY');syncLabelValues();draw();});
 $('resetSelectedLabel').onclick=()=>{const o=labelObjects[activeObjectId];if(!o)return; o.x=o.baseX??o.x;o.y=o.baseY??o.y;o.font=o.kind==='dimension'?16:17;syncLabelValues();draw();status('已重設目前選取標註；孔洞座標不變。');};
-$('export').onclick=()=>{if(!validForExport())return;draw();const a=document.createElement('a');a.download='榮際數位畫單_Alpha0.2_測試版.png';a.href=canvas.toDataURL('image/png');a.click();status('已產生 PNG 下載。請確認檔案已保存，並核對輸出圖。');};
-$('reset').onclick=()=>{if(!confirm('重設所有設定為範例值？'))return;nextId=2;selectedId=1;basins=[{id:1,name:'一號槽盆孔',shape:'ellipse',w:45,d:30,x:50,y:30,showLeft:true,showRight:false,showFront:true,showRear:false,tap:null,dx:0,dy:0}];marks={'前側':'','左側':'','右側':'','後方':''};$('length').value=100;$('depth').value=61;$('notes').value='';$('compact').checked=false;$('showDims').checked=true;$('guideCenter').checked=true;$('guideEdges').checked=true;$('fontSize').value=18;$('offsetX').value=0;$('offsetY').value=0;labelObjects={};activeObjectId=null;syncUI();draw();status('已重設為範例值。');};
+$('export').onclick=()=>{if(!validForExport())return;draw();const a=document.createElement('a');a.download='榮際數位畫單_Alpha0.22_多槽盆排列修正版.png';a.href=canvas.toDataURL('image/png');a.click();status('已產生 PNG 下載。請確認檔案已保存，並核對輸出圖。');};
+$('reset').onclick=()=>{if(!confirm('重設所有設定為範例值？'))return;nextId=2;selectedId=1;basins=[{id:1,name:'一號槽盆孔',shape:'ellipse',w:45,d:30,x:50,y:30,showLeft:true,showRight:false,showFront:true,showRear:false,tap:null,dx:0,dy:0}];marks={'前側':'','左側':'','右側':'','後方':''};$('length').value=100;$('depth').value=61;$('notes').value='';$('compact').checked=false;$('showDims').checked=true;$('guideCenter').checked=true;$('guideEdges').checked=true;$('showCenterDims').checked=true;$('showRegionDims').checked=true;$('showGapDims').checked=false;$('fontSize').value=18;$('offsetX').value=0;$('offsetY').value=0;labelObjects={};activeObjectId=null;syncUI();draw();status('已重設為範例值。');};
 
 $('quickMode').onclick=()=>setMode('quick');
 $('editMode').onclick=()=>setMode('edit');
@@ -356,6 +415,14 @@ function canvasPoint(e){const r=canvas.getBoundingClientRect();return {x:(e.clie
 canvas.addEventListener('pointerdown',e=>{
  const p=canvasPoint(e),o=hitTestObject(p.x,p.y);
  if(editMode&&o){
+   if(o.kind==='geometry'){
+     activeObjectId=null;
+     if(o.ownerId!==null&&o.ownerId!==undefined&&basins.some(b=>b.id===o.ownerId))selectedId=o.ownerId;
+     syncUI();
+     const target=$(o.target||'basinW');if(target){const section=target.closest('.section');if(section)section.scrollIntoView({behavior:'smooth',block:'start'});target.focus({preventScroll:true});}
+     status('已選取圖面物件：'+o.text+'。幾何物件透過設定欄位修改，拖曳不會直接改變孔洞座標。');
+     draw();e.preventDefault();return;
+   }
    activeObjectId=o.id;refreshLabelSelect();syncLabelValues();
    // Editing a text object should bring the text/annotation controls into view.
    const textPanelTarget=$('fontSize');
@@ -369,6 +436,12 @@ canvas.addEventListener('pointerdown',e=>{
    canvas.setPointerCapture(e.pointerId);draw();e.preventDefault();
  }
  else if(quickMode&&o){
+   if(o.kind==='geometry'){
+     if(o.ownerId!==null&&o.ownerId!==undefined&&basins.some(b=>b.id===o.ownerId))selectedId=o.ownerId;
+     syncUI();
+     const target=$(o.target||'basinW');if(target){const section=target.closest('.section');if(section)section.scrollIntoView({behavior:'smooth',block:'start'});target.focus({preventScroll:true});}
+     status('已定位至「'+o.text+'」相關設定。');draw();e.preventDefault();return;
+   }
    activeObjectId=o.id;refreshLabelSelect();syncLabelValues();
    // Select the owning basin first so the left-side controls display the correct object.
    if(o.ownerId!==undefined && basins.some(b=>b.id===o.ownerId)){
