@@ -86,7 +86,7 @@ canvas{display:block;width:100%;height:auto;background:white}.status{font-size:1
     </div>
     <div class="notice" id="tapConflict" hidden>槽盆相對定位與獨立定位資料不一致。圖面依目前選取的定位模式顯示；切換模式不會刪除另一組定位資料。</div>
     <div class="actions"><button id="syncTap">將目前定位轉換到另一種定位方式</button></div>
-    <p class="hint">Alpha 0.23b：龍頭孔中心預設距檯面後側 8.5 cm。槽盆相對模式仍使用槽盆定位 X；Y 軸統一以檯面後距 8.5 cm 為準，避免與槽盆中心 Y 值衝突。水龍頭孔超出檯面時只顯示，不阻擋 PNG 輸出。</p>
+    <p class="hint">Alpha 0.23c：龍頭孔中心預設距檯面後側 8.5 cm。槽盆相對模式仍使用槽盆定位 X；Y 軸統一以檯面後距 8.5 cm 為準，避免與槽盆中心 Y 值衝突。水龍頭孔超出檯面時只顯示，不阻擋 PNG 輸出。</p>
   </div>
   <div class="section">
     <h2>5. 多槽盆排列</h2>
@@ -153,7 +153,7 @@ function newTap(){return {enabled:true,mode:'basin',shape:'circle',diameter:3.5,
 function tapSize(t){return t.diameter==='custom'?Number(t.customDiameter):Number(t.diameter);}
 function tapPos(b){
  const t=b.tap;if(!t)return null;
- // Alpha 0.23b rule: rear distance is the canonical Y reference in both modes.
+ // Alpha 0.23c rule: rear distance is the canonical Y reference in both modes.
  const rearDistance=Number(t.y===undefined?8.5:t.y);
  const y=num('depth')-rearDistance;
  if(t.mode==='independent')return {x:Number(t.x),y};
@@ -265,7 +265,7 @@ function setMode(mode){
  $('quickMode').classList.toggle('mode-on',quickMode);$('editMode').classList.toggle('mode-on',editMode);
  $('quickMode').textContent='快速定位設定欄位：'+(quickMode?'啟用中':'關閉');
  $('editMode').textContent='圖面物件編輯：'+(editMode?'啟用中':'關閉');
- $('modeHint').textContent=quickMode?'快速定位模式：點選槽盆孔或其定位標註，可同步高亮該槽盆孔群組並跳至相關設定欄位。':editMode?'圖面物件編輯模式：點選槽盆孔或其定位標註，可同步高亮該槽盆孔群組；文字物件仍可獨立拖曳，孔洞幾何位置不會因此改變。':'一般模式：不會因點擊或拖曳而修改圖面物件。快速定位可選取槽盆孔、龍頭孔與檯面；圖面物件編輯可選取幾何物件並跳轉設定，文字與標籤可拖曳。';
+ $('modeHint').textContent=quickMode?'快速定位模式：點選槽盆孔或其定位標註，可同步高亮該槽盆孔群組並跳至相關設定欄位。':editMode?'圖面物件編輯模式：可直接拖曳槽盆孔與龍頭孔；拖曳標註文字只改文字位置，不改孔位。選取孔洞時，其關聯標註與定位虛線同步高亮。':'一般模式：不會因點擊或拖曳而修改圖面物件。快速定位可選取槽盆孔、龍頭孔與檯面；圖面物件編輯可選取幾何物件並跳轉設定，文字與標籤可拖曳。';
  activeObjectId=null;draw();
 }
 
@@ -273,7 +273,7 @@ let geometryTargets=[];
 function draw(){
  geometryTargets=[];
  const L=num('length'),D=num('depth');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
- ctx.fillStyle='#222';ctx.textAlign='left';ctx.font='bold 28px sans-serif';ctx.fillText('榮際數位畫單｜Alpha 0.23b',60,45);
+ ctx.fillStyle='#222';ctx.textAlign='left';ctx.font='bold 28px sans-serif';ctx.fillText('榮際數位畫單｜Alpha 0.23c',60,45);
  ctx.font='18px sans-serif';ctx.fillStyle='#555';ctx.fillText('檯面尺寸：'+fmt(L)+' × '+fmt(D)+' cm',60,75);
  if(!(L>0&&D>0)){ctx.fillStyle='#a22';ctx.fillText('請輸入有效的檯面尺寸',60,110);return;}
  const maxW=900,maxH=480,scale=Math.min(maxW/L,maxH/D),w=L*scale,h=D*scale,x=(canvas.width-w)/2,y=150+(maxH-h)/2;
@@ -410,7 +410,7 @@ $('fontSize').addEventListener('input',()=>{const o=labelObjects[activeObjectId]
 $('offsetX').addEventListener('input',()=>{const o=labelObjects[activeObjectId];if(!o)return;o.x=(o.baseX??o.x)+num('offsetX');syncLabelValues();draw();});
 $('offsetY').addEventListener('input',()=>{const o=labelObjects[activeObjectId];if(!o)return;o.y=(o.baseY??o.y)+num('offsetY');syncLabelValues();draw();});
 $('resetSelectedLabel').onclick=()=>{const o=labelObjects[activeObjectId];if(!o)return; o.x=o.baseX??o.x;o.y=o.baseY??o.y;o.font=o.kind==='dimension'?16:17;syncLabelValues();draw();status('已重設目前選取標註；孔洞座標不變。');};
-$('export').onclick=()=>{if(!validForExport())return;const wasClean=exportCleanMode;exportCleanMode=true;draw();const png=canvas.toDataURL('image/png');exportCleanMode=wasClean;draw();const a=document.createElement('a');a.download='榮際數位畫單_Alpha0.23b_正式輸出版.png';a.href=png;a.click();status('已輸出正式 PNG：已排除操作用群組高亮與文字選取框。');};
+$('export').onclick=()=>{if(!validForExport())return;const wasClean=exportCleanMode;exportCleanMode=true;draw();const png=canvas.toDataURL('image/png');exportCleanMode=wasClean;draw();const a=document.createElement('a');a.download='榮際數位畫單_Alpha0.23c_正式輸出版.png';a.href=png;a.click();status('已輸出正式 PNG：已排除操作用群組高亮與文字選取框。');};
 $('reset').onclick=()=>{if(!confirm('重設所有設定為範例值？'))return;nextId=2;selectedId=1;basins=[{id:1,name:'一號槽盆孔',shape:'ellipse',w:45,d:30,x:50,y:30,showLeft:true,showRight:false,showFront:true,showRear:false,tap:null,dx:0,dy:0}];marks={'前側':'','左側':'','右側':'','後方':''};$('length').value=100;$('depth').value=61;$('notes').value='';$('compact').checked=false;$('showDims').checked=true;$('guideCenter').checked=true;$('guideEdges').checked=true;$('showCenterDims').checked=true;$('showRegionDims').checked=true;$('showGapDims').checked=false;$('fontSize').value=18;$('offsetX').value=0;$('offsetY').value=0;labelObjects={};activeObjectId=null;syncUI();draw();status('已重設為範例值。');};
 
 $('quickMode').onclick=()=>setMode('quick');
@@ -425,7 +425,14 @@ canvas.addEventListener('pointerdown',e=>{
      if(o.ownerId!==null&&o.ownerId!==undefined&&basins.some(b=>b.id===o.ownerId))selectedId=o.ownerId;
      syncUI();
      const target=$(o.target||'basinW');if(target){const section=target.closest('.section');if(section)section.scrollIntoView({behavior:'smooth',block:'start'});target.focus({preventScroll:true});}
-     status('已選取圖面物件：'+o.text+'。幾何物件透過設定欄位修改，拖曳不會直接改變孔洞座標。');
+     if(o.ownerType==='basin'||o.ownerType==='tap'){
+       const owner=basins.find(b=>b.id===o.ownerId);
+       if(owner){
+         dragState={type:'geometry',ownerType:o.ownerType,ownerId:o.ownerId,startX:p.x,startY:p.y,origX:Number(o.ownerType==='basin'?owner.x:(tapPos(owner)||{x:owner.x}).x),origY:Number(o.ownerType==='basin'?owner.y:(tapPos(owner)||{y:num('depth')-8.5}).y),moved:false};
+         canvas.setPointerCapture(e.pointerId);
+         status('已選取 '+o.text+'；可直接拖曳孔洞，相關標註與定位虛線會同步更新。');
+       }
+     }else{status('已選取圖面物件：'+o.text+'。可透過左側設定欄位調整。');}
      draw();e.preventDefault();return;
    }
    activeObjectId=o.id;refreshLabelSelect();syncLabelValues();
@@ -472,12 +479,41 @@ canvas.addEventListener('pointerdown',e=>{
    e.preventDefault();
  }
 });
+function drawingTransform(){
+ const L=num('length'),D=num('depth'),maxW=900,maxH=480,scale=Math.min(maxW/L,maxH/D),w=L*scale,h=D*scale,x=(canvas.width-w)/2,y=150+(maxH-h)/2;
+ return {L,D,scale,w,h,x,y};
+}
 canvas.addEventListener('pointermove',e=>{
- if(!dragState||!editMode)return;const p=canvasPoint(e),o=labelObjects[dragState.id];if(!o)return;
- const dx=p.x-dragState.startX,dy=p.y-dragState.startY;
+ if(!dragState||!editMode)return;
+ const p=canvasPoint(e),dx=p.x-dragState.startX,dy=p.y-dragState.startY;
+ if(dragState.type==='geometry'){
+   const tr=drawingTransform(),b=basins.find(v=>v.id===dragState.ownerId);if(!b)return;
+   if(dragState.ownerType==='basin'){
+     b.x=Math.max(Number(b.w)/2,Math.min(tr.L-Number(b.w)/2,dragState.origX+dx/tr.scale));
+     b.y=Math.max(Number(b.d)/2,Math.min(tr.D-Number(b.d)/2,dragState.origY-dy/tr.scale));
+   }else if(dragState.ownerType==='tap'&&b.tap){
+     const t=b.tap;
+     const holeW=t.shape==='rect'?Number(t.w):Number(tapSize(t)||3.5),holeD=t.shape==='rect'?Number(t.d):holeW;
+     const newX=Math.max(holeW/2,Math.min(tr.L-holeW/2,dragState.origX+dx/tr.scale));
+     const modelY=Math.max(holeD/2,Math.min(tr.D-holeD/2,dragState.origY-dy/tr.scale));
+     const rearDistance=tr.D-modelY;
+     if(t.mode==='independent')t.x=newX;
+     else{t.relXDir=newX>=Number(b.x)?'right':'left';t.relX=Math.abs(newX-Number(b.x));}
+     // Alpha 0.23b positioning rule: fore/aft is stored as distance from the rear edge in both modes.
+     t.y=rearDistance;
+   }
+   dragState.moved=true;syncUI();draw();e.preventDefault();return;
+ }
+ const o=labelObjects[dragState.id];if(!o)return;
  o.x=dragState.origX+dx;o.y=dragState.origY+dy;dragState.moved=true;draw();syncLabelValues();e.preventDefault();
 });
-canvas.addEventListener('pointerup',()=>{if(dragState&&dragState.moved)status('已移動標註；孔洞實際尺寸與座標未變更。左側第 7 區可調整標註外觀。');dragState=null;});
+canvas.addEventListener('pointerup',()=>{
+ if(dragState&&dragState.moved){
+   if(dragState.type==='geometry')status(dragState.ownerType==='basin'?'已移動槽盆孔；孔位座標與相關標註、定位虛線已同步更新。':'已移動龍頭孔；孔位與定位參考已同步更新。');
+   else status('已移動標註；孔洞實際尺寸與座標未變更。左側第 7 區可調整標註外觀。');
+ }
+ dragState=null;
+});
 canvas.addEventListener('pointercancel',()=>{dragState=null;});
 canvas.addEventListener('dblclick',e=>{
  if(!editMode)return;const p=canvasPoint(e),o=hitTestObject(p.x,p.y);if(!o)return;
